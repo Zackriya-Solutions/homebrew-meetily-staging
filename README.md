@@ -1,4 +1,35 @@
-# Meetily - Meeting Transcription and Analysis
+<div align="center" style="border-bottom: none">
+    <h1>
+        <img src="docs/Meetily.png" style="border-radius: 10px;" />
+        <br>
+        Meetily - AI-Powered Meeting Assistant
+    </h1>
+    <a href="https://trendshift.io/repositories/13272" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13272" alt="Zackriya-Solutions%2Fmeeting-minutes | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+    <br>
+    <br>
+    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases/"><img src="https://img.shields.io/badge/Pre_Release-Link-brightgreen" alt="Pre-Release"></a>
+    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases/tag/v0.0.3"><img src="https://img.shields.io/badge/Stars-4k+-red" alt="Stars"></a>
+    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases/tag/v0.0.3"><img src="https://img.shields.io/badge/License-MIT-blue" alt="License"></a>
+    <a href="https://github.com/Zackriya-Solutions/meeting-minutes/releases/tag/v0.0.3"><img src="https://img.shields.io/badge/Supported_OS-macOS,_Windows-yellow" alt="Supported OS"></a>
+    <br>
+    <h3>
+    <br>
+    Open source Ai Assistant for taking meeting notes
+    </h3>
+    <p align="center">
+    Get latest <a href="https://www.zackriya.com/meetily-subscribe/"><b>Product updates</b></a> <br><br>
+    <a href="https://meetily.zackriya.com"><b>Website</b></a> •
+    <a href="https://in.linkedin.com/company/zackriya-solutions"><b>Authors</b></a>
+    •
+    <a href="https://discord.gg/crRymMQBFH"><b>Discord Channel</b></a>
+</p>
+
+
+<br>
+</div>
+
+
+
 
 Meetily is a powerful meeting transcription and analysis tool that helps you extract key insights from your meetings. It consists of two main components:
 
