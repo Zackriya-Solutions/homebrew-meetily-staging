@@ -225,59 +225,69 @@ class MeetilyBackend < Formula
       echo -e "[INFO] Creating models directory..."
       mkdir -p "$MODEL_DIR"
 
-      # Check for Whisper models
+      # Check for Whisper models and handle model selection
       echo -e "[INFO] Checking for Whisper models..."
-      MODEL_COUNT=$(find "$MODEL_DIR" -name "ggml-*.bin" | wc -l)
       
-      if [ "$MODEL_COUNT" -eq 0 ]; then
-        echo -e "[WARNING] No Whisper model found. Downloading the small model..."
-        cd "$BACKEND_DIR"
-        ./download-ggml-model.sh small
-        
-        # Move the model to the models directory
-        if [ -f "$BACKEND_DIR/ggml-small.bin" ]; then
-          mv "$BACKEND_DIR/ggml-small.bin" "$MODEL_DIR/"
-          echo -e "Done! Model 'small' saved in '$MODEL_DIR/ggml-small.bin'"
-          echo -e "You can now start the Meetily backend server with: meetily-server"
-        else
-          echo -e "[ERROR] Failed to download model. Please run meetily-download-model manually."
-          exit 1
-        fi
-      fi
-
-      # Find the model to use
+      # If a specific model was requested, try to use or download it first
       if [ -n "$MODEL_NAME" ]; then
-        # User specified a model name, check if it exists
+        echo -e "[INFO] Requested model: $MODEL_NAME"
+        
+        # Check if the requested model already exists
         if [ -f "$MODEL_DIR/ggml-$MODEL_NAME.bin" ]; then
+          echo -e "[SUCCESS] Found requested model: ggml-$MODEL_NAME.bin"
           MODEL="$MODEL_DIR/ggml-$MODEL_NAME.bin"
-          echo -e "[SUCCESS] Using specified model: ggml-$MODEL_NAME.bin"
         else
-          echo -e "[WARNING] Specified model 'ggml-$MODEL_NAME.bin' not found."
-          echo -e "[INFO] Attempting to download the specified model..."
+          # Try to download the requested model
+          echo -e "[INFO] Requested model not found. Attempting to download model: $MODEL_NAME"
           cd "$BACKEND_DIR"
           ./download-ggml-model.sh "$MODEL_NAME"
           
           if [ -f "$BACKEND_DIR/ggml-$MODEL_NAME.bin" ]; then
             mv "$BACKEND_DIR/ggml-$MODEL_NAME.bin" "$MODEL_DIR/"
             MODEL="$MODEL_DIR/ggml-$MODEL_NAME.bin"
-            echo -e "[SUCCESS] Downloaded and using model: ggml-$MODEL_NAME.bin"
+            echo -e "[SUCCESS] Downloaded requested model: ggml-$MODEL_NAME.bin"
           else
-            echo -e "[ERROR] Failed to download specified model. Will use an available model instead."
-            MODEL=$(find "$MODEL_DIR" -name "ggml-*.bin" | head -n 1)
+            echo -e "[ERROR] Failed to download requested model: $MODEL_NAME"
+            # Don't fall back to small automatically - let the user know
+            echo -e "[INFO] Please try downloading the model manually with: meetily-download-model $MODEL_NAME"
+            exit 1
           fi
         fi
       else
-        # No model specified, use the first available one
-        MODEL=$(find "$MODEL_DIR" -name "ggml-*.bin" | head -n 1)
+        # No specific model requested, check if any models exist
+        MODEL_COUNT=$(find "$MODEL_DIR" -name "ggml-*.bin" | wc -l)
+        
+        if [ "$MODEL_COUNT" -eq 0 ]; then
+          # No models found, download small as default
+          echo -e "[INFO] No models found. Downloading the small model as default..."
+          cd "$BACKEND_DIR"
+          ./download-ggml-model.sh small
+          
+          if [ -f "$BACKEND_DIR/ggml-small.bin" ]; then
+            mv "$BACKEND_DIR/ggml-small.bin" "$MODEL_DIR/"
+            MODEL="$MODEL_DIR/ggml-small.bin"
+            echo -e "[SUCCESS] Downloaded default model: ggml-small.bin"
+          else
+            echo -e "[ERROR] Failed to download default model."
+            echo -e "[INFO] Please try downloading a model manually with: meetily-download-model [model_name]"
+            exit 1
+          fi
+        else
+          # Use the first available model
+          MODEL=$(find "$MODEL_DIR" -name "ggml-*.bin" | head -n 1)
+          MODEL_BASENAME=$(basename "$MODEL")
+          echo -e "[INFO] Using existing model: $MODEL_BASENAME"
+        fi
       fi
-
+      
+      # Final check to ensure we have a valid model
       if [ -z "$MODEL" ]; then
-        echo -e "[ERROR] No model found. Please run meetily-download-model first."
+        echo -e "[ERROR] No model found or specified. Please run meetily-download-model first."
         exit 1
       fi
       
       MODEL_BASENAME=$(basename "$MODEL")
-      echo -e "[SUCCESS] Using model: whisper-server-package/models/$MODEL_BASENAME"
+      echo -e "[SUCCESS] Using model: $MODEL_BASENAME"
 
       # Start Whisper server
       echo -e "[INFO] Starting Whisper server..."
@@ -373,9 +383,49 @@ class MeetilyBackend < Formula
       echo -e "${GREEN}API Documentation available at http://localhost:5167/docs${NC}"
       echo -e "${BLUE}Press Ctrl+C to stop all services${NC}"
       
-      # Wait for Ctrl+C
-      trap "kill $WHISPER_PID $PYTHON_PID 2>/dev/null; exit" INT TERM
-      wait
+      # Cleanup function to ensure all processes are terminated
+      function cleanup {
+        echo -e "${YELLOW}Shutting down Meetily services...${NC}"
+        
+        # Kill the Whisper server process
+        if [ -n "$WHISPER_PID" ] && kill -0 $WHISPER_PID 2>/dev/null; then
+          echo -e "${BLUE}Stopping Whisper server...${NC}"
+          kill -TERM $WHISPER_PID 2>/dev/null || kill -KILL $WHISPER_PID 2>/dev/null
+        fi
+        
+        # Kill the Python backend process
+        if [ -n "$PYTHON_PID" ] && kill -0 $PYTHON_PID 2>/dev/null; then
+          echo -e "${BLUE}Stopping FastAPI backend...${NC}"
+          kill -TERM $PYTHON_PID 2>/dev/null || kill -KILL $PYTHON_PID 2>/dev/null
+        fi
+        
+        # Find and kill any orphaned whisper-server processes
+        ORPHANED_WHISPER=$(pgrep -f "whisper-server")
+        if [ -n "$ORPHANED_WHISPER" ]; then
+          echo -e "${YELLOW}Cleaning up orphaned Whisper server processes...${NC}"
+          pkill -f "whisper-server"
+        fi
+        
+        # Find and kill any orphaned uvicorn processes related to our app
+        ORPHANED_UVICORN=$(pgrep -f "uvicorn app.main:app")
+        if [ -n "$ORPHANED_UVICORN" ]; then
+          echo -e "${YELLOW}Cleaning up orphaned FastAPI processes...${NC}"
+          pkill -f "uvicorn app.main:app"
+        fi
+        
+        echo -e "${GREEN}All Meetily services stopped.${NC}"
+        exit 0
+      }
+      
+      # Register the cleanup function for various signals
+      trap cleanup INT TERM QUIT HUP
+      
+      # Wait for Ctrl+C or other termination signal
+      wait $WHISPER_PID $PYTHON_PID
+      
+      # If we get here, one of the processes has terminated unexpectedly
+      # Run cleanup to ensure everything is properly shut down
+      cleanup
     EOS
 
     chmod 0755, bin/"meetily-download-model"
