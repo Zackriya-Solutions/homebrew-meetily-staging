@@ -22,7 +22,7 @@ Meetily is a powerful meeting transcription and analysis tool that helps you ext
 
 ## Installation
 
-Installing Meetily is a simple two-step process using Homebrew:
+Installing Meetily is a simple two-step process:
 
 ### Step 1: Install Meetily Backend
 
@@ -60,7 +60,7 @@ ollama pull mistral
 ### Step 2: Install Meetily Frontend
 
 ```bash
-# Install the frontend application
+# Install the frontend application (requires the tap from step 1)
 brew install --cask meetily
 ```
 
@@ -71,13 +71,31 @@ That's it! You can now start using Meetily.
 ### Starting the Backend Server
 
 ```bash
+# Start with default settings
 meetily-server
+
+# Specify a different model
+meetily-server --model medium
+
+# Specify a language (default is English)
+meetily-server --language fr
+
+# Use both options together
+meetily-server --model large-v3 --language de
+
+# Use short options
+meetily-server -m small -l es
 ```
+
+Available options:
+- `-m, --model NAME`: Specify the model name to use (tiny, base, small, medium, large-v3)
+- `-l, --language LANG`: Specify the language code (default: en)
+- `-h, --help`: Show help message
 
 This command:
 - Starts the Whisper transcription server on port 8178
 - Starts the FastAPI backend on port 5167
-- Automatically downloads a model if none is found
+- Automatically downloads the specified model if it's not found
 
 You should see output confirming both services are running:
 ```

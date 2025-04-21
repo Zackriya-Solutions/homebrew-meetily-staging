@@ -94,6 +94,7 @@ class MeetilyBackend < Formula
         HOST="127.0.0.1"
         PORT="8178"
         MODEL="models/ggml-small.bin"
+        LANGUAGE="en"
 
         # Parse command line arguments
         while [[ $# -gt 0 ]]; do
@@ -110,6 +111,10 @@ class MeetilyBackend < Formula
                     MODEL="$2"
                     shift 2
                     ;;
+                --language)
+                    LANGUAGE="$2"
+                    shift 2
+                    ;;
                 *)
                     echo "Unknown option: $1"
                     exit 1
@@ -122,6 +127,7 @@ class MeetilyBackend < Formula
             --model "$MODEL" \\
             --host "$HOST" \\
             --port "$PORT" \\
+            --language "$LANGUAGE" \\
             --diarize \\
             --print-progress
       EOS
@@ -167,6 +173,49 @@ class MeetilyBackend < Formula
       RED='\\033[0;31m'
       NC='\\033[0m' # No Color
 
+      # Default values
+      MODEL_NAME=""
+      LANGUAGE="en"
+      HOST="127.0.0.1"
+      PORT_WHISPER="8178"
+      PORT_FASTAPI="5167"
+
+      # Help message
+      function show_help {
+        echo "Usage: meetily-server [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo "  -m, --model NAME     Specify the model name to use (tiny, base, small, medium, large-v3)"
+        echo "  -l, --language LANG  Specify the language code (default: en)"
+        echo "  -h, --help           Show this help message"
+        echo ""
+        echo "Examples:"
+        echo "  meetily-server --model medium --language fr"
+        echo "  meetily-server -m small -l de"
+        exit 0
+      }
+
+      # Parse command line arguments
+      while [[ $# -gt 0 ]]; do
+        case $1 in
+          -m|--model)
+            MODEL_NAME="$2"
+            shift 2
+            ;;
+          -l|--language)
+            LANGUAGE="$2"
+            shift 2
+            ;;
+          -h|--help)
+            show_help
+            ;;
+          *)
+            echo -e "${RED}[ERROR] Unknown option: $1${NC}"
+            show_help
+            ;;
+        esac
+      done
+
       # Set paths
       BACKEND_DIR="#{prefix}/backend"
       WHISPER_DIR="$BACKEND_DIR/whisper-server-package"
@@ -196,8 +245,32 @@ class MeetilyBackend < Formula
         fi
       fi
 
-      # Find the first model
-      MODEL=$(find "$MODEL_DIR" -name "ggml-*.bin" | head -n 1)
+      # Find the model to use
+      if [ -n "$MODEL_NAME" ]; then
+        # User specified a model name, check if it exists
+        if [ -f "$MODEL_DIR/ggml-$MODEL_NAME.bin" ]; then
+          MODEL="$MODEL_DIR/ggml-$MODEL_NAME.bin"
+          echo -e "[SUCCESS] Using specified model: ggml-$MODEL_NAME.bin"
+        else
+          echo -e "[WARNING] Specified model 'ggml-$MODEL_NAME.bin' not found."
+          echo -e "[INFO] Attempting to download the specified model..."
+          cd "$BACKEND_DIR"
+          ./download-ggml-model.sh "$MODEL_NAME"
+          
+          if [ -f "$BACKEND_DIR/ggml-$MODEL_NAME.bin" ]; then
+            mv "$BACKEND_DIR/ggml-$MODEL_NAME.bin" "$MODEL_DIR/"
+            MODEL="$MODEL_DIR/ggml-$MODEL_NAME.bin"
+            echo -e "[SUCCESS] Downloaded and using model: ggml-$MODEL_NAME.bin"
+          else
+            echo -e "[ERROR] Failed to download specified model. Will use an available model instead."
+            MODEL=$(find "$MODEL_DIR" -name "ggml-*.bin" | head -n 1)
+          fi
+        fi
+      else
+        # No model specified, use the first available one
+        MODEL=$(find "$MODEL_DIR" -name "ggml-*.bin" | head -n 1)
+      fi
+
       if [ -z "$MODEL" ]; then
         echo -e "[ERROR] No model found. Please run meetily-download-model first."
         exit 1
@@ -223,7 +296,7 @@ class MeetilyBackend < Formula
       fi
       
       # Start the server with error handling
-      ./run-server.sh --model "$MODEL" --host "127.0.0.1" --port "8178" &
+      ./run-server.sh --model "$MODEL" --host "$HOST" --port "$PORT_WHISPER" --language "$LANGUAGE" &
       WHISPER_PID=$!
       
       # Wait a moment to see if the server starts successfully
@@ -261,7 +334,7 @@ class MeetilyBackend < Formula
           
           # Try starting the server again
           cd "$WHISPER_DIR"
-          ./run-server.sh --model "$MODEL" --host "127.0.0.1" --port "8178" &
+          ./run-server.sh --model "$MODEL" --host "$HOST" --port "$PORT_WHISPER" --language "$LANGUAGE" &
           WHISPER_PID=$!
           sleep 2
         else
