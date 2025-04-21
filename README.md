@@ -26,15 +26,17 @@ Installing Meetily is a simple two-step process:
 
 ### Step 1: Install Meetily Backend
 
+Brew Tap
+
 ```bash
 # Add the custom tap
 brew tap zackriya-solutions/meetily
+```
 
-# Install the backend
-brew install meetily-backend
-
-# Download a Whisper model (medium is recommended)
-meetily-download-model medium
+Install the Cask (The backend will be automatically installed.)
+```bash
+# Install the frontend application (requires the tap from step 1)
+brew install --cask meetily
 ```
 
 After installation, you can configure AI providers (optional):
@@ -46,25 +48,6 @@ echo "ANTHROPIC_API_KEY=your_key_here" > $(brew --prefix)/opt/meetily-backend/ba
 # For Groq (alternative high-quality provider)
 echo "GROQ_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
 ```
-
-For local LLM support (no API key required):
-
-```bash
-# Install Ollama
-brew install ollama
-
-# Pull a model (Mistral is recommended)
-ollama pull mistral
-```
-
-### Step 2: Install Meetily Frontend
-
-```bash
-# Install the frontend application (requires the tap from step 1)
-brew install --cask meetily
-```
-
-That's it! You can now start using Meetily.
 
 ## Usage
 
