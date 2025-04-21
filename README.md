@@ -1,112 +1,124 @@
-# Meetily Backend - Meeting Transcription and Analysis
+# Meetily - Meeting Transcription and Analysis
 
-Meetily Backend is a powerful FastAPI-based service that provides automatic transcription and intelligent analysis of meetings. It uses state-of-the-art speech recognition technology combined with AI analysis to help you extract key insights from your meetings.
+Meetily is a powerful meeting transcription and analysis tool that helps you extract key insights from your meetings. It consists of two main components:
+
+1. **Meetily Backend**: A FastAPI-based service that provides automatic transcription and intelligent analysis of meetings
+2. **Meetily Frontend**: A desktop application that provides a user-friendly interface for managing and analyzing your meetings
 
 ## Features
 
 - **Automatic Speech Recognition**: Powered by Whisper.cpp for fast, accurate transcription
-- **Speaker Diarization**: Identifies different speakers in the conversation
 - **Meeting Analysis**: Generates summaries, action items, and key points
 - **API-First Design**: Easy integration with frontend applications or other services
 - **Multiple AI Options**: Support for Anthropic Claude, Groq, and local Ollama models
 
-## Installation
+## System Requirements
 
-### Prerequisites
-
-- macOS (via Homebrew)
+- macOS Monterey or higher (Apple Silicon recommended)
 - Python 3.9 or higher
 - FFmpeg (installed automatically as a dependency)
+- 2GB+ of free disk space (for models and application)
+- 4GB+ of RAM recommended
 
-### Install via Homebrew
+## Installation
 
-First, add the Meetily tap (this is a custom tap, not an official Homebrew formula):
+Installing Meetily is a simple two-step process using Homebrew:
 
-```bash
-brew tap zackriya-solutions/meetily-backend
-```
-
-Then install the backend:
+### Step 1: Install Meetily Backend
 
 ```bash
+# Add the custom tap
+brew tap zackriya-solutions/meetily
+
+# Install the backend
 brew install meetily-backend
-```
 
-### Post-Installation Setup
-
-1. Download a Whisper model:
-
-```bash
+# Download a Whisper model (medium is recommended)
 meetily-download-model medium
 ```
 
-Available models: `tiny`, `base`, `small`, `medium`, `large-v3`
-
-To run the server, run
-```bash
-meetily-server
-```
-
-2. Configure AI providers (optional but recommended):
-
-You can set up API keys during installation or manually:
+After installation, you can configure AI providers (optional):
 
 ```bash
+# For Anthropic Claude (recommended for best analysis)
 echo "ANTHROPIC_API_KEY=your_key_here" > $(brew --prefix)/opt/meetily-backend/backend/.env
+
+# For Groq (alternative high-quality provider)
 echo "GROQ_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
 ```
 
-3. For local LLM support, install Ollama:
+For local LLM support (no API key required):
 
 ```bash
+# Install Ollama
 brew install ollama
+
+# Pull a model (Mistral is recommended)
 ollama pull mistral
 ```
 
+### Step 2: Install Meetily Frontend
+
+```bash
+# Install the frontend application
+brew install --cask meetily
+```
+
+That's it! You can now start using Meetily.
+
 ## Usage
 
-### Starting the Server
+### Starting the Backend Server
 
 ```bash
 meetily-server
 ```
 
-This will start both the Whisper transcription server and the FastAPI backend.
+This command:
+- Starts the Whisper transcription server on port 8178
+- Starts the FastAPI backend on port 5167
+- Automatically downloads a model if none is found
 
-### Accessing the API
-
-- Whisper Server: http://localhost:8178
-- FastAPI Backend: http://localhost:5167
-- API Documentation: http://localhost:5167/docs
-
-## API Endpoints
-
-The Meetily Backend provides several endpoints for meeting transcription and analysis:
-
-### Transcription
-
-- `POST /transcribe`: Upload an audio file for transcription
-- `GET /transcriptions/{id}`: Retrieve a specific transcription
-- `GET /transcriptions`: List all transcriptions
-
-### Analysis
-
-- `POST /analyze/{transcription_id}`: Generate analysis for a transcription
-- `GET /analysis/{id}`: Retrieve a specific analysis
-- `GET /analysis`: List all analyses
-
-## Frontend Integration
-
-For the complete Meetily experience, install the frontend application from our custom tap:
-
-```bash
-brew tap zackriya-solutions/meetily
-brew install --cask meetily
+You should see output confirming both services are running:
 ```
+Meetily backend started!
+Whisper Server running on http://localhost:8178
+FastAPI Backend running on http://localhost:5167
+API Documentation available at http://localhost:5167/docs
+Press Ctrl+C to stop all services
+```
+
+### Using the Frontend Application
+
+1. **Start the backend server** first (as described above)
+2. **Launch the Meetily application** from your Applications folder or Spotlight
+3. The application will automatically connect to the backend at http://localhost:5167
+
+#### Frontend Features
+
+- **Upload Meetings**: Drag and drop or select audio/video files for transcription
+- **View Transcriptions**: See timestamped transcripts with speaker identification
+- **Generate Analysis**: Create summaries, action items, and key points from your meetings
+- **Export Results**: Save transcriptions and analyses in various formats
+- **Manage History**: Access your previous meeting transcriptions and analyses
+
+## API Documentation
+
+For detailed API documentation, visit the Swagger UI at:
+```
+http://localhost:5167/docs
+```
+
+This interactive documentation allows you to:
+- Explore all available endpoints
+- Test API calls directly from your browser
+- View request/response schemas and examples
 
 ## Troubleshooting
 
-### Model Issues
+### Backend Issues
+
+#### Model Problems
 
 If you encounter issues with the Whisper model:
 
@@ -118,13 +130,63 @@ meetily-download-model small
 ls -la $(brew --prefix)/opt/meetily-backend/backend/whisper-server-package/models/
 ```
 
-### Server Connection Issues
+#### Server Connection Issues
 
 If the server fails to start:
 
-1. Check if ports 8178 and 5167 are available
-2. Verify that FFmpeg is installed correctly
-3. Check the logs for specific error messages
+1. Check if ports 8178 and 5167 are available:
+   ```bash
+   lsof -i :8178
+   lsof -i :5167
+   ```
+
+2. Verify that FFmpeg is installed correctly:
+   ```bash
+   which ffmpeg
+   ffmpeg -version
+   ```
+
+3. Check the logs for specific error messages when running `meetily-server`
+
+4. Try running the Whisper server manually:
+   ```bash
+   cd $(brew --prefix)/opt/meetily-backend/backend/whisper-server-package/
+   ./run-server.sh --model models/ggml-medium.bin
+   ```
+
+### Frontend Issues
+
+If the frontend application doesn't connect to the backend:
+
+1. Ensure the backend server is running (`meetily-server`)
+2. Check if the application can access localhost:5167
+3. Restart the application after starting the backend
+
+If the application fails to launch:
+
+```bash
+# Clear quarantine attributes
+xattr -cr /Applications/meeting-minutes-frontend.app
+```
+
+## Uninstallation
+
+To completely remove Meetily:
+
+```bash
+# Remove the frontend
+brew uninstall --cask meetily
+
+# Remove the backend
+brew uninstall meetily-backend
+
+# Optional: remove the taps
+brew untap zackriya-solutions/meetily
+brew untap zackriya-solutions/meetily-backend
+
+# Optional: remove Ollama if no longer needed
+brew uninstall ollama
+```
 
 ## Development and Contributions
 
