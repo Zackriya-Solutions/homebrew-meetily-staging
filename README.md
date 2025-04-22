@@ -78,6 +78,9 @@ echo "ANTHROPIC_API_KEY=your_key_here" > $(brew --prefix)/opt/meetily-backend/ba
 
 # For Groq (alternative high-quality provider)
 echo "GROQ_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
+
+# For OpenAI (GPT models)
+echo "OPENAI_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
 ```
 
 ## Usage

@@ -1,5 +1,5 @@
 cask "meetily" do
-  version "0.0.3"
+  version "0.0.4"
   sha256 "87f01fbdc3ab39af881408cd67564e27d3547df3feb07a3b73481a9ff1704d62"
   url "https://github.com/Zackriya-Solutions/meeting-minutes/releases/download/v#{version}/dmg_darwin_arch64.zip"
   name "Meetily"
