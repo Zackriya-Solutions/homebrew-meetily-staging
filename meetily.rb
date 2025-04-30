@@ -1,7 +1,7 @@
 cask "meetily" do
   version "0.0.4"
-  sha256 "87f01fbdc3ab39af881408cd67564e27d3547df3feb07a3b73481a9ff1704d62"
-  url "https://github.com/Zackriya-Solutions/meeting-minutes/releases/download/v#{version}/dmg_darwin_arch64.zip"
+  sha256 "d165e593e0a6fe92de23f7e3f0c9032def8086a0cd49e2e9a63636b954f70dfa"
+  url "https://meetily.zackriya.com/dmg_darwin_arch64.zip"
   name "Meetily"
   desc "Meeting transcription and analysis application"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
@@ -10,14 +10,14 @@ cask "meetily" do
   depends_on macos: ">= :monterey"
   depends_on arch: :arm64
 
-  container nested: "dmg/meeting-minutes-frontend_0.1.0_aarch64.dmg"
+  container nested: "dmg/meetily-frontend_0.0.4_aarch64.dmg"
   
-  app "meeting-minutes-frontend.app"
+  app "meetily-frontend.app"
   
   postflight do
     # Clear extended attributes to avoid security/quarantine issues
     system_command "/usr/bin/xattr",
-                   args: ["-c", "/Applications/meeting-minutes-frontend.app"],
+                   args: ["-c", "/Applications/meetily-frontend.app"],
                    sudo: false
   end
 

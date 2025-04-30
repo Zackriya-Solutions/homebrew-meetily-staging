@@ -1,9 +1,9 @@
 class MeetilyBackend < Formula
   desc "FastAPI backend for Meetily meeting transcription and analysis"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
-  url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/feat/openai-provider-backend-cleanup.zip"
+  url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/main.zip"
   version "0.0.4"
-  sha256 "f39220c76bc2a6391556099a5f1ec0049d89d7231bc199b08b4e53b2e2577dd1" # Update with actual SHA256
+  sha256 "d165e593e0a6fe92de23f7e3f0c9032def8086a0cd49e2e9a63636b954f70dfa" # Update with actual SHA256
 
   depends_on "cmake" => :build
   depends_on "llvm" => :build
