@@ -2,8 +2,8 @@ class MeetilyBackend < Formula
   desc "FastAPI backend for Meetily meeting transcription and analysis"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
   url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/main.zip"
-  version "0.1.0"
-  sha256 "9f9f2864577d1d07682caf1f0fcff5b5d46254d587e722845aab83ce05bcc959" # Update with actual SHA256
+  version "0.0.4"
+  sha256 "797f512f02fa93ad8f8269bd66482b972bd0a393f358bb6150bdc0f63b80cd74" # Update with actual SHA256
 
   depends_on "cmake" => :build
   depends_on "llvm" => :build
@@ -27,6 +27,12 @@ class MeetilyBackend < Formula
     cp "backend/.env", "#{prefix}/backend/" if File.exist?("backend/.env")
     cp "backend/download-ggml-model.sh", "#{prefix}/backend/"
     
+    # Ensure transcript_processor module is copied if it exists
+    if File.exist?("backend/transcript_processor.py")
+      cp "backend/transcript_processor.py", "#{prefix}/backend/app/"
+      ohai "Copied transcript_processor module to app directory"
+    end
+
     # Create virtual environment and install dependencies
     system "python3", "-m", "venv", "#{prefix}/backend/venv"
     system "#{prefix}/backend/venv/bin/pip", "install", "--upgrade", "pip"
@@ -372,6 +378,12 @@ class MeetilyBackend < Formula
         echo -e "[SUCCESS] Fixed Process_transcrip import path"
       fi
       
+      # Fix transcript_processor import
+      if grep -q "from transcript_processor import" "$BACKEND_DIR/app/main.py"; then
+        sed -i.bak 's/from transcript_processor import/from app.transcript_processor import/g' "$BACKEND_DIR/app/main.py"
+        echo -e "[SUCCESS] Fixed transcript_processor import path"
+      fi
+      
       # Run the Python backend
       python -m uvicorn app.main:app --host 0.0.0.0 --port 5167 &
       PYTHON_PID=$!
@@ -432,7 +444,7 @@ class MeetilyBackend < Formula
     chmod 0755, bin/"meetily-server"
     
     # Ask for API keys
-    ohai "Meetily Backend can use Anthropic Claude or Groq for enhanced meeting analysis."
+    ohai "Meetily Backend can use Anthropic Claude, Groq, or OpenAI for enhanced meeting analysis."
     
     print "Would you like to configure an Anthropic API key? (y/n): "
     if $stdin.gets.chomp.downcase == "y"
@@ -458,6 +470,20 @@ class MeetilyBackend < Formula
       end
     end
     
+    print "Would you like to configure an OpenAI API key? (y/n): "
+    if $stdin.gets.chomp.downcase == "y"
+      print "Enter your OpenAI API key: "
+      openai_key = $stdin.gets.chomp
+      if !openai_key.empty?
+        if File.exist?("#{prefix}/backend/.env")
+          system "echo \"OPENAI_API_KEY=#{openai_key}\" >> #{prefix}/backend/.env"
+        else
+          system "echo \"OPENAI_API_KEY=#{openai_key}\" > #{prefix}/backend/.env"
+        end
+        ohai "OpenAI API key configured successfully!"
+      end
+    end
+    
     ohai "Meetily Backend installation complete! Run 'meetily-download-model medium' to download a model, then 'meetily-server' to start the server."
   end
 
@@ -478,9 +504,10 @@ class MeetilyBackend < Formula
         - FastAPI Backend: http://localhost:5167
         - API Documentation: http://localhost:5167/docs
       
-      If you want to update your Claude or Groq API keys for meeting analysis:
+      If you want to update your API keys for meeting analysis:
         echo "ANTHROPIC_API_KEY=your_key_here" > #{prefix}/backend/.env
         echo "GROQ_API_KEY=your_key_here" >> #{prefix}/backend/.env
+        echo "OPENAI_API_KEY=your_key_here" >> #{prefix}/backend/.env
       
       Ollama should be running for local LLM support:
         brew install ollama
