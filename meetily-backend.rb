@@ -449,47 +449,6 @@ class MeetilyBackend < Formula
     chmod 0755, bin/"meetily-download-model"
     chmod 0755, bin/"meetily-server"
     
-    # Ask for API keys
-    ohai "Meetily Backend can use Anthropic Claude, Groq, or OpenAI for enhanced meeting analysis."
-    
-    print "Would you like to configure an Anthropic API key? (y/n): "
-    if $stdin.gets.chomp.downcase == "y"
-      print "Enter your Anthropic API key: "
-      anthropic_key = $stdin.gets.chomp
-      if !anthropic_key.empty?
-        system "echo \"ANTHROPIC_API_KEY=#{anthropic_key}\" > #{prefix}/backend/.env"
-        ohai "Anthropic API key configured successfully!"
-      end
-    end
-    
-    print "Would you like to configure a Groq API key? (y/n): "
-    if $stdin.gets.chomp.downcase == "y"
-      print "Enter your Groq API key: "
-      groq_key = $stdin.gets.chomp
-      if !groq_key.empty?
-        if File.exist?("#{prefix}/backend/.env")
-          system "echo \"GROQ_API_KEY=#{groq_key}\" >> #{prefix}/backend/.env"
-        else
-          system "echo \"GROQ_API_KEY=#{groq_key}\" > #{prefix}/backend/.env"
-        end
-        ohai "Groq API key configured successfully!"
-      end
-    end
-    
-    print "Would you like to configure an OpenAI API key? (y/n): "
-    if $stdin.gets.chomp.downcase == "y"
-      print "Enter your OpenAI API key: "
-      openai_key = $stdin.gets.chomp
-      if !openai_key.empty?
-        if File.exist?("#{prefix}/backend/.env")
-          system "echo \"OPENAI_API_KEY=#{openai_key}\" >> #{prefix}/backend/.env"
-        else
-          system "echo \"OPENAI_API_KEY=#{openai_key}\" > #{prefix}/backend/.env"
-        end
-        ohai "OpenAI API key configured successfully!"
-      end
-    end
-    
     ohai "Meetily Backend installation complete! Run 'meetily-download-model medium' to download a model, then 'meetily-server' to start the server."
   end
 
