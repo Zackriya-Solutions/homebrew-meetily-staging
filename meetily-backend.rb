@@ -3,7 +3,7 @@ class MeetilyBackend < Formula
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
   url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/main.zip"
   version "0.0.4"
-  sha256 "797f512f02fa93ad8f8269bd66482b972bd0a393f358bb6150bdc0f63b80cd74" # Update with actual SHA256
+  sha256 "19646d7fae50be8990b4a4a9d3482ac3237fee1f2e6af0d8126498c8abc3bc55" # Update with actual SHA256
 
   depends_on "cmake" => :build
   depends_on "llvm" => :build
