@@ -366,10 +366,16 @@ class MeetilyBackend < Formula
       # Fix the Python import paths
       echo -e "[INFO] Fixing Python import paths..."
       
-      # Fix db import
+      # Fix db import in main.py
       if grep -q "from db import" "$BACKEND_DIR/app/main.py"; then
         sed -i.bak 's/from db import/from app.db import/g' "$BACKEND_DIR/app/main.py"
-        echo -e "[SUCCESS] Fixed db import path"
+        echo -e "[SUCCESS] Fixed db import path in main.py"
+      fi
+      
+      # Fix db import in transcript_processor.py
+      if grep -q "from db import" "$BACKEND_DIR/app/transcript_processor.py"; then
+        sed -i.bak 's/from db import/from app.db import/g' "$BACKEND_DIR/app/transcript_processor.py"
+        echo -e "[SUCCESS] Fixed db import path in transcript_processor.py"
       fi
       
       # Fix Process_transcrip import
