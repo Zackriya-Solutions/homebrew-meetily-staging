@@ -1,6 +1,6 @@
 cask "meetily" do
   version "0.0.4"
-  sha256 "b60be3ec666db8d24fc9085dbdb2572a4f059e2d0328509da0876a706dab0495"
+  sha256 "19646d7fae50be8990b4a4a9d3482ac3237fee1f2e6af0d8126498c8abc3bc55"
   url "https://meetily.zackriya.com/dmg_darwin_arch64.zip"
   name "Meetily"
   desc "Meeting transcription and analysis application"
