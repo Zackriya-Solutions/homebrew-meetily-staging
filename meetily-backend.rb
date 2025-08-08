@@ -3,7 +3,7 @@ class MeetilyBackend < Formula
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
   url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/task/analytics.zip"
   version "0.0.5"
-  sha256 "NEW_BACKEND_SHA256_HASH_HERE"
+  sha256 "a8f0c7ab50c5a473e54c099a4a66edd491108e125643c69adacc8dcd6627a12d"
 
   depends_on "cmake" => :build
   depends_on "llvm" => :build
