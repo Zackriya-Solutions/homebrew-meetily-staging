@@ -1,7 +1,7 @@
 class MeetilyBackend < Formula
   desc "FastAPI backend for Meetily meeting transcription and analysis"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
-  url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/main.zip"
+  url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/task/analytics.zip"
   version "0.0.5"
   sha256 "NEW_BACKEND_SHA256_HASH_HERE"
 
