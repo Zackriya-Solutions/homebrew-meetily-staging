@@ -61,7 +61,7 @@ Brew Tap
 
 ```bash
 # Add the custom tap
-brew tap zackriya-solutions/meetily
+brew tap zackriya-solutions/meetily-staging
 ```
 
 Install the Cask (The backend will be automatically installed.)
