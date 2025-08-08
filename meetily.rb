@@ -1,7 +1,15 @@
+# cask "meetily" do
+#   version "0.0.5"
+#   sha256 "NEW_SHA256_HASH_HERE"
+#   url "https://meetily.zackriya.com/dmg_darwin_arch64_v0.0.5.zip"
+#   name "Meetily"
+#   desc "Meeting transcription and analysis application"
+#   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
+
 cask "meetily" do
   version "0.0.5"
-  sha256 "NEW_SHA256_HASH_HERE"
-  url "https://meetily.zackriya.com/dmg_darwin_arch64_v0.0.5.zip"
+  sha256 "19646d7fae50be8990b4a4a9d3482ac3237fee1f2e6af0d8126498c8abc3bc55"
+  url "https://meetily.zackriya.com/dmg_darwin_arch64.zip"
   name "Meetily"
   desc "Meeting transcription and analysis application"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
