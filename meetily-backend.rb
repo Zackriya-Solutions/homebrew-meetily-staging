@@ -12,6 +12,48 @@ class MeetilyBackend < Formula
   depends_on "ffmpeg"
   depends_on "git"
 
+  def pre_install
+    # Backup existing database and user data before upgrade
+    backup_dir = "#{Dir.home}/.meetily_backup_#{Time.now.strftime('%Y%m%d_%H%M%S')}"
+    old_backend_dir = "#{HOMEBREW_PREFIX}/opt/meetily-backend/backend"
+    
+    if Dir.exist?(old_backend_dir)
+      mkdir_p backup_dir
+      ohai "Backing up existing Meetily data to #{backup_dir}"
+      
+      # Backup database if it exists
+      old_db = "#{old_backend_dir}/meeting_minutes.db"
+      if File.exist?(old_db)
+        cp old_db, "#{backup_dir}/meeting_minutes.db"
+        ohai "Database backed up"
+      end
+      
+      # Backup .env file if it exists
+      old_env = "#{old_backend_dir}/.env"
+      if File.exist?(old_env)
+        cp old_env, "#{backup_dir}/.env"
+        ohai "Configuration backed up"
+      end
+      
+      # Backup transcripts directory if it exists
+      old_transcripts = "#{old_backend_dir}/transcripts"
+      if Dir.exist?(old_transcripts)
+        cp_r old_transcripts, "#{backup_dir}/"
+        ohai "Transcripts backed up"
+      end
+      
+      # Backup chroma directory if it exists
+      old_chroma = "#{old_backend_dir}/chroma"
+      if Dir.exist?(old_chroma)
+        cp_r old_chroma, "#{backup_dir}/"
+        ohai "Vector database backed up"
+      end
+      
+      # Store backup location for post_install
+      File.write("#{Dir.home}/.meetily_last_backup", backup_dir)
+    end
+  end
+
   def install
     # Create necessary directories
     mkdir_p "#{prefix}/backend"
@@ -452,9 +494,68 @@ class MeetilyBackend < Formula
     ohai "Meetily Backend installation complete! Run 'meetily-download-model medium' to download a model, then 'meetily-server' to start the server."
   end
 
+  def post_install
+    # Restore backed up data after upgrade
+    backup_marker = "#{Dir.home}/.meetily_last_backup"
+    
+    if File.exist?(backup_marker)
+      backup_dir = File.read(backup_marker).strip
+      
+      if Dir.exist?(backup_dir)
+        ohai "Restoring Meetily data from backup: #{backup_dir}"
+        
+        # Restore database
+        backup_db = "#{backup_dir}/meeting_minutes.db"
+        target_db = "#{prefix}/backend/meeting_minutes.db"
+        
+        if File.exist?(backup_db)
+          cp backup_db, target_db
+          ohai "Database restored successfully"
+        end
+        
+        # Restore .env file
+        backup_env = "#{backup_dir}/.env"
+        target_env = "#{prefix}/backend/.env"
+        
+        if File.exist?(backup_env)
+          cp backup_env, target_env
+          ohai "Configuration restored successfully"
+        end
+        
+        # Restore transcripts directory
+        backup_transcripts = "#{backup_dir}/transcripts"
+        target_transcripts = "#{prefix}/backend/transcripts"
+        
+        if Dir.exist?(backup_transcripts)
+          rm_rf target_transcripts if Dir.exist?(target_transcripts)
+          cp_r backup_transcripts, target_transcripts
+          ohai "Transcripts restored successfully"
+        end
+        
+        # Restore chroma directory
+        backup_chroma = "#{backup_dir}/chroma"
+        target_chroma = "#{prefix}/backend/chroma"
+        
+        if Dir.exist?(backup_chroma)
+          rm_rf target_chroma if Dir.exist?(target_chroma)
+          cp_r backup_chroma, target_chroma
+          ohai "Vector database restored successfully"
+        end
+        
+        # Clean up backup marker (keep backup directory for safety)
+        rm backup_marker
+        
+        ohai "Data restoration complete! Backup kept at: #{backup_dir}"
+        ohai "You can safely remove the backup directory if everything works correctly."
+      end
+    end
+  end
+
   def caveats
     <<~EOS
       Meetily Backend has been installed!
+      
+      🔄 Your meeting data is automatically backed up and restored during upgrades!
       
       To download a Whisper model:
         meetily-download-model [model_name]
