@@ -104,14 +104,6 @@ class MeetilyBackend < Formula
       ohai "📱 Fresh installation - no previous Meetily backend found"
     end
   end
-            mkdir_p "#{var}/meetily/chroma"
-            cp_r Dir["#{old_chroma}/*"], "#{var}/meetily/chroma/"
-            ohai "Vector database migrated to persistent location"
-          end
-        end
-      end
-    end
-  end
 
   def install
     # CRITICAL: Backup data from previous installation before proceeding
