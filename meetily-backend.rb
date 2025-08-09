@@ -28,9 +28,7 @@ class MeetilyBackend < Formula
     
     # Create symlink for database in var directory
     # This ensures meeting_minutes.db persists across upgrades
-    if File.exist?("#{var}/meetily/meeting_minutes.db")
-      ln_sf "#{var}/meetily/meeting_minutes.db", "#{prefix}/backend/meeting_minutes.db"
-    end
+    ln_sf "#{var}/meetily/meeting_minutes.db", "#{prefix}/backend/meeting_minutes.db"
 
     # Copy backend files
     cp_r "backend/app", "#{prefix}/backend/"
