@@ -1,9 +1,9 @@
 class MeetilyBackend < Formula
   desc "FastAPI backend for Meetily meeting transcription and analysis"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
-  url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/task/analytics.zip"
-  version "0.0.5"
-  sha256 "a8f0c7ab50c5a473e54c099a4a66edd491108e125643c69adacc8dcd6627a12d"
+  url "https://github.com/Zackriya-Solutions/meeting-minutes/archive/refs/heads/main.zip"
+  version "0.0.4"
+  sha256 "c0f87ce007be65380b3ff8920740fb3cc2f63b0db3446e42d22afffe98ac247b"
 
   depends_on "cmake" => :build
   depends_on "llvm" => :build
@@ -12,71 +12,13 @@ class MeetilyBackend < Formula
   depends_on "ffmpeg"
   depends_on "git"
 
-  def backup_existing_data_if_present
-    # Check if user is upgrading from old version (0.0.4) that stored data in installation directory
-    # Look for existing meetily-backend installation in Homebrew
-    old_cellar = "#{HOMEBREW_CELLAR}/meetily-backend"
-    
-    if Dir.exist?(old_cellar)
-      # Find the most recent version directory
-      versions = Dir.glob("#{old_cellar}/*").select { |d| File.directory?(d) }
-      if !versions.empty?
-        latest_version = versions.max_by { |d| File.mtime(d) }
-        old_backend_dir = "#{latest_version}/backend"
-        
-        if Dir.exist?(old_backend_dir)
-          ohai "Found existing Meetily installation - backing up user data..."
-          
-          # Create backup in persistent location
-          mkdir_p "#{var}/meetily"
-          
-          # Backup database if it exists
-          old_db = "#{old_backend_dir}/meeting_minutes.db"
-          if File.exist?(old_db)
-            cp old_db, "#{var}/meetily/meeting_minutes.db"
-            ohai "Database migrated to persistent location"
-          end
-          
-          # Backup transcripts directory if it exists and has content
-          old_transcripts = "#{old_backend_dir}/transcripts"
-          if Dir.exist?(old_transcripts) && !Dir.empty?(old_transcripts)
-            mkdir_p "#{var}/meetily/transcripts"
-            cp_r Dir["#{old_transcripts}/*"], "#{var}/meetily/transcripts/"
-            ohai "Transcripts migrated to persistent location"
-          end
-          
-          # Backup chroma directory if it exists and has content
-          old_chroma = "#{old_backend_dir}/chroma"
-          if Dir.exist?(old_chroma) && !Dir.empty?(old_chroma)
-            mkdir_p "#{var}/meetily/chroma"
-            cp_r Dir["#{old_chroma}/*"], "#{var}/meetily/chroma/"
-            ohai "Vector database migrated to persistent location"
-          end
-        end
-      end
-    end
-  end
-
   def install
-    # CRITICAL: Backup data from previous installation before proceeding
-    backup_existing_data_if_present
-    
     # Create necessary directories
     mkdir_p "#{prefix}/backend"
     mkdir_p "#{prefix}/backend/app"
     mkdir_p "#{prefix}/backend/whisper-server-package/models"
-    
-    # Create persistent data directories in var (survives upgrades)
-    mkdir_p "#{var}/meetily/transcripts"
-    mkdir_p "#{var}/meetily/chroma"
-    
-    # Create symlinks so app finds data in expected locations
-    ln_sf "#{var}/meetily/transcripts", "#{prefix}/backend/transcripts"
-    ln_sf "#{var}/meetily/chroma", "#{prefix}/backend/chroma"
-    
-    # Create symlink for database in var directory
-    # This ensures meeting_minutes.db persists across upgrades
-    ln_sf "#{var}/meetily/meeting_minutes.db", "#{prefix}/backend/meeting_minutes.db"
+    mkdir_p "#{prefix}/backend/transcripts"
+    mkdir_p "#{prefix}/backend/chroma"
 
     # Copy backend files
     cp_r "backend/app", "#{prefix}/backend/"
@@ -510,28 +452,9 @@ class MeetilyBackend < Formula
     ohai "Meetily Backend installation complete! Run 'meetily-download-model medium' to download a model, then 'meetily-server' to start the server."
   end
 
-  def post_install
-    # Migrate existing database if it exists in the old location
-    old_db = "#{prefix}/backend/meeting_minutes.db"
-    new_db = "#{var}/meetily/meeting_minutes.db"
-    
-    if File.exist?(old_db) && !File.exist?(new_db)
-      ohai "Migrating existing database to persistent location"
-      cp old_db, new_db
-      rm old_db
-      ln_sf new_db, old_db
-      ohai "Database migration complete"
-    elsif !File.exist?(old_db) && File.exist?(new_db)
-      # Create symlink if database exists in var but not in backend
-      ln_sf new_db, old_db
-    end
-  end
-
   def caveats
     <<~EOS
       Meetily Backend has been installed!
-      
-      📁 Data is stored in #{var}/meetily/ and persists across upgrades!
       
       To download a Whisper model:
         meetily-download-model [model_name]
