@@ -12,7 +12,55 @@ class MeetilyBackend < Formula
   depends_on "ffmpeg"
   depends_on "git"
 
+  def backup_existing_data_if_present
+    # Check if user is upgrading from old version (0.0.4) that stored data in installation directory
+    # Look for existing meetily-backend installation in Homebrew
+    old_cellar = "#{HOMEBREW_CELLAR}/meetily-backend"
+    
+    if Dir.exist?(old_cellar)
+      # Find the most recent version directory
+      versions = Dir.glob("#{old_cellar}/*").select { |d| File.directory?(d) }
+      if !versions.empty?
+        latest_version = versions.max_by { |d| File.mtime(d) }
+        old_backend_dir = "#{latest_version}/backend"
+        
+        if Dir.exist?(old_backend_dir)
+          ohai "Found existing Meetily installation - backing up user data..."
+          
+          # Create backup in persistent location
+          mkdir_p "#{var}/meetily"
+          
+          # Backup database if it exists
+          old_db = "#{old_backend_dir}/meeting_minutes.db"
+          if File.exist?(old_db)
+            cp old_db, "#{var}/meetily/meeting_minutes.db"
+            ohai "Database migrated to persistent location"
+          end
+          
+          # Backup transcripts directory if it exists and has content
+          old_transcripts = "#{old_backend_dir}/transcripts"
+          if Dir.exist?(old_transcripts) && !Dir.empty?(old_transcripts)
+            mkdir_p "#{var}/meetily/transcripts"
+            cp_r Dir["#{old_transcripts}/*"], "#{var}/meetily/transcripts/"
+            ohai "Transcripts migrated to persistent location"
+          end
+          
+          # Backup chroma directory if it exists and has content
+          old_chroma = "#{old_backend_dir}/chroma"
+          if Dir.exist?(old_chroma) && !Dir.empty?(old_chroma)
+            mkdir_p "#{var}/meetily/chroma"
+            cp_r Dir["#{old_chroma}/*"], "#{var}/meetily/chroma/"
+            ohai "Vector database migrated to persistent location"
+          end
+        end
+      end
+    end
+  end
+
   def install
+    # CRITICAL: Backup data from previous installation before proceeding
+    backup_existing_data_if_present
+    
     # Create necessary directories
     mkdir_p "#{prefix}/backend"
     mkdir_p "#{prefix}/backend/app"
