@@ -74,7 +74,7 @@ After installation, you can configure AI providers (optional):
 
 ```bash
 # For Anthropic Claude (recommended for best analysis)
-echo "ANTHROPIC_API_KEY=your_key_here" > $(brew --prefix)/opt/meetily-backend/backend/.env
+echo "ANTHROPIC_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
 
 # For Groq (alternative high-quality provider)
 echo "GROQ_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
@@ -82,6 +82,8 @@ echo "GROQ_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backen
 # For OpenAI (GPT models)
 echo "OPENAI_API_KEY=your_key_here" >> $(brew --prefix)/opt/meetily-backend/backend/.env
 ```
+
+**Note**: Your meeting data is automatically backed up and restored during Homebrew upgrades - no data loss!
 
 ## Usage
 
