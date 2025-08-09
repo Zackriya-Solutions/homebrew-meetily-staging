@@ -18,7 +18,7 @@ cask "meetily" do
   depends_on macos: ">= :monterey"
   depends_on arch: :arm64
 
-  container nested: "dmg/meetily-frontend_0.0.5_aarch64.dmg"
+  container nested: "dmg/meetily-frontend_0.0.4_aarch64.dmg"
   
   app "meetily-frontend.app"
   
