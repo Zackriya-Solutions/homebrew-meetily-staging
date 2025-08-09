@@ -25,6 +25,12 @@ class MeetilyBackend < Formula
     # Create symlinks so app finds data in expected locations
     ln_sf "#{var}/meetily/transcripts", "#{prefix}/backend/transcripts"
     ln_sf "#{var}/meetily/chroma", "#{prefix}/backend/chroma"
+    
+    # Create symlink for database in var directory
+    # This ensures meeting_minutes.db persists across upgrades
+    if File.exist?("#{var}/meetily/meeting_minutes.db")
+      ln_sf "#{var}/meetily/meeting_minutes.db", "#{prefix}/backend/meeting_minutes.db"
+    end
 
     # Copy backend files
     cp_r "backend/app", "#{prefix}/backend/"
@@ -456,6 +462,23 @@ class MeetilyBackend < Formula
     chmod 0755, bin/"meetily-server"
     
     ohai "Meetily Backend installation complete! Run 'meetily-download-model medium' to download a model, then 'meetily-server' to start the server."
+  end
+
+  def post_install
+    # Migrate existing database if it exists in the old location
+    old_db = "#{prefix}/backend/meeting_minutes.db"
+    new_db = "#{var}/meetily/meeting_minutes.db"
+    
+    if File.exist?(old_db) && !File.exist?(new_db)
+      ohai "Migrating existing database to persistent location"
+      cp old_db, new_db
+      rm old_db
+      ln_sf new_db, old_db
+      ohai "Database migration complete"
+    elsif !File.exist?(old_db) && File.exist?(new_db)
+      # Create symlink if database exists in var but not in backend
+      ln_sf new_db, old_db
+    end
   end
 
   def caveats
