@@ -1,6 +1,7 @@
 cask "meetily" do
     version "0.0.6"
-    sha256 "fa5708fed0a9f03db524f26a2190dfd72a636e731414416710a7f63b05466aa6"
+    # sha256 "fa5708fed0a9f03db524f26a2190dfd72a636e731414416710a7f63b05466aa6"
+    sha256 "bfe69737fabb03fa21c35a5e3665fafc8dc463a1a885f6bac6f5dac633409d15"
     url "https://github.com/Zackriya-Solutions/meeting-minutes/releases/download/test-v0.0.6/dmg_test_0.0.6.zip"
     name "Meetily"
     desc "Meeting transcription and analysis application"
