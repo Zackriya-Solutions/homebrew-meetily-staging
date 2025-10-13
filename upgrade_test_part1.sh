@@ -32,29 +32,31 @@ print_error() {
 echo "📋 Phase 1: Complete System Cleanup"
 echo "-----------------------------------"
 
-print_status "Uninstalling existing Meetily components..."
+print_status "Uninstalling existing Meetily frontend..."
 brew uninstall --force meetily 2>/dev/null || true
-brew uninstall --force meetily-backend 2>/dev/null || true
 
-print_status "Removing var folder data..."
-sudo rm -rf /opt/homebrew/var/meetily 2>/dev/null || true
+# NOTE: Commenting out var folder cleanup to preserve existing data during upgrade testing
+# print_status "Removing var folder data..."
+# sudo rm -rf /opt/homebrew/var/meetily 2>/dev/null || true
 
 print_status "Removing and re-adding tap..."
 brew untap zackriya-solutions/meetily-staging 2>/dev/null || true
 
+print_status "Removing conflicting tap to avoid formula ambiguity..."
+brew untap zackriya-solutions/meetily 2>/dev/null || true
+
 echo
 
-# Phase 2: Deploy Old Version
-echo "📋 Phase 2: Deploy Old Version"
-echo "------------------------------"
+# Phase 2: Deploy Old Version (0.0.5)
+echo "📋 Phase 2: Deploy Old Version (0.0.5)"
+echo "--------------------------------------"
 
 print_status "Copying old version files..."
-cp meetily-old.rb meetily.rb
-cp meetily-backend-old.rb meetily-backend.rb
-cp meetily-outside-old.rb Casks/meetily.rb
+cp meetily-new.rb meetily.rb
+cp meetily-new.rb Casks/meetily.rb
 
 print_status "Committing old version..."
-git add Casks/meetily.rb meetily-backend.rb meetily.rb
+git add Casks/meetily.rb meetily.rb
 git commit -m "Automated test: Deploy old version" || print_warning "No changes to commit"
 git push
 
@@ -68,18 +70,15 @@ print_status "Adding tap..."
 brew tap zackriya-solutions/meetily-staging
 
 print_status "Installing old version..."
-brew install --cask meetily
+brew install --cask zackriya-solutions/meetily-staging/meetily
 
-OLD_FRONTEND_VERSION=$(brew list --cask meetily --versions | awk '{print $2}')
-OLD_BACKEND_VERSION=$(brew list meetily-backend --versions | awk '{print $2}')
+OLD_FRONTEND_VERSION=$(brew list --cask zackriya-solutions/meetily-staging/meetily --versions | awk '{print $2}')
 
 print_status "Installed versions:"
 echo "  Frontend: $OLD_FRONTEND_VERSION"
-echo "  Backend: $OLD_BACKEND_VERSION"
 
-# Save versions for Part 2
+# Save version for Part 2
 echo "$OLD_FRONTEND_VERSION" > /tmp/meetily_test_old_frontend_version
-echo "$OLD_BACKEND_VERSION" > /tmp/meetily_test_old_backend_version
 
 echo
 
@@ -124,7 +123,7 @@ print_warning "🔧 Backend server is running in the background (PID: $SERVER_PI
 echo "   It will be automatically stopped when you run Part 2"
 echo
 echo "📊 Current Status:"
-echo "  - Old version installed: Frontend $OLD_FRONTEND_VERSION, Backend $OLD_BACKEND_VERSION"
+echo "  - Old version (0.0.5) installed: Frontend $OLD_FRONTEND_VERSION"
 echo "  - Backend server running on http://localhost:5167"
 echo "  - Frontend app opened for data creation"
 echo

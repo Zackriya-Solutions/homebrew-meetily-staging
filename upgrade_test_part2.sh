@@ -29,18 +29,17 @@ print_error() {
 }
 
 # Check if Part 1 was run
-if [ ! -f "/tmp/meetily_test_old_frontend_version" ] || [ ! -f "/tmp/meetily_test_old_backend_version" ]; then
+if [ ! -f "/tmp/meetily_test_old_frontend_version" ]; then
     print_error "Part 1 has not been run! Please run upgrade_test_part1.sh first."
     exit 1
 fi
 
-# Load old versions
+# Load old version
 OLD_FRONTEND_VERSION=$(cat /tmp/meetily_test_old_frontend_version)
-OLD_BACKEND_VERSION=$(cat /tmp/meetily_test_old_backend_version)
 
 echo "📋 Continuing from Part 1"
 echo "-------------------------"
-print_status "Old versions: Frontend $OLD_FRONTEND_VERSION, Backend $OLD_BACKEND_VERSION"
+print_status "Old version: Frontend $OLD_FRONTEND_VERSION"
 
 # Phase 5: Stop Server and Document Test Data
 echo
@@ -108,17 +107,16 @@ fi
 
 echo
 
-# Phase 6: Deploy New Version
-echo "📋 Phase 6: Deploy New Version"
-echo "------------------------------"
+# Phase 6: Deploy New Version (0.0.6 with integrated backend)
+echo "📋 Phase 6: Deploy New Version (0.0.6 with integrated backend)"
+echo "-------------------------------------------------------------"
 
 print_status "Copying new version files..."
-cp meetily-new.rb meetily.rb
-cp meetily-backend-new.rb meetily-backend.rb
-cp meetily-outside-new.rb Casks/meetily.rb
+cp meetily-latest.rb meetily.rb
+cp meetily-latest.rb Casks/meetily.rb
 
 print_status "Committing new version..."
-git add Casks/meetily.rb meetily-backend.rb meetily.rb
+git add Casks/meetily.rb meetily.rb
 if git commit -m "Automated test: Deploy new version"; then
     print_status "New version committed successfully"
 else
@@ -132,6 +130,9 @@ echo
 echo "📋 Phase 7: Upgrade and Validate"
 echo "--------------------------------"
 
+print_status "Removing conflicting tap to avoid formula ambiguity..."
+brew untap zackriya-solutions/meetily 2>/dev/null || print_warning "Tap zackriya-solutions/meetily not found or already removed"
+
 print_status "Updating Homebrew..."
 brew update
 
@@ -139,15 +140,12 @@ print_status "Checking for available upgrades..."
 brew outdated | grep meetily || print_warning "No meetily upgrades shown in outdated list"
 
 print_status "Upgrading Meetily..."
-brew upgrade --cask meetily
-brew upgrade meetily-backend
+brew upgrade --cask zackriya-solutions/meetily-staging/meetily
 
-NEW_FRONTEND_VERSION=$(brew list --cask meetily --versions | awk '{print $2}')
-NEW_BACKEND_VERSION=$(brew list meetily-backend --versions | awk '{print $2}')
+NEW_FRONTEND_VERSION=$(brew list --cask zackriya-solutions/meetily-staging/meetily --versions | awk '{print $2}')
 
 print_status "Upgraded versions:"
 echo "  Frontend: $OLD_FRONTEND_VERSION → $NEW_FRONTEND_VERSION"
-echo "  Backend: $OLD_BACKEND_VERSION → $NEW_BACKEND_VERSION"
 
 echo
 
@@ -228,8 +226,8 @@ echo "🎉 Upgrade Test Complete!"
 echo "========================"
 echo
 echo "📊 Test Summary:"
-echo "  - Old Version: Frontend $OLD_FRONTEND_VERSION, Backend $OLD_BACKEND_VERSION"
-echo "  - New Version: Frontend $NEW_FRONTEND_VERSION, Backend $NEW_BACKEND_VERSION"
+echo "  - Old Version (0.0.5): Frontend $OLD_FRONTEND_VERSION"
+echo "  - New Version (0.0.6): Frontend $NEW_FRONTEND_VERSION (with integrated backend)"
 echo "  - Data Files: $INITIAL_FILE_COUNT → $FINAL_FILE_COUNT"
 echo "  - Data Size: $INITIAL_DB_SIZE → $FINAL_DB_SIZE"
 echo
@@ -240,6 +238,6 @@ rm -f /tmp/meetily_test_*
 echo
 echo "  To clean up completely:"
 echo "    sudo rm -rf /opt/homebrew/var/meetily/"
-echo "    brew uninstall --force meetily meetily-backend"
+echo "    brew uninstall --force meetily"
 echo
 echo "✅ Test completed successfully!"
