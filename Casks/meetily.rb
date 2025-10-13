@@ -6,7 +6,7 @@ cask "meetily" do
   desc "Meeting transcription and analysis application"
   homepage "https://github.com/Zackriya-Solutions/meeting-minutes"
 
-  depends_on formula: "meetily-backend"
+  depends_on formula: "zackriya-solutions/meetily-staging/meetily-backend"
   depends_on macos: ">= :monterey"
   depends_on arch: :arm64
 
